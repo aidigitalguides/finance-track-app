@@ -1,0 +1,55 @@
+# ============================================================
+# PaisaTrack — .htaccess (place in project root)
+# ============================================================
+
+RewriteEngine On
+
+# NOTE: HTTPS redirect is disabled intentionally.
+# Enable it ONLY after SSL is confirmed active on your subdomain.
+# To enable, uncomment the 3 lines below:
+# RewriteCond %{HTTPS} off
+# RewriteCond %{HTTP_HOST} ^paisatrack\.aidigitalguides\.com$ [NC]
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Default index
+DirectoryIndex index.php login.php dashboard.php
+
+# Block direct access to sensitive files
+<FilesMatch "^(config\.php|schema\.sql|\.env|check\.php)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Block access to includes folder
+RewriteRule ^includes/ - [F,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
+
+# Block common attack patterns
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule .* index.php [F,L]
+</IfModule>
+
+# PHP settings for Hostinger
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+    php_value max_execution_time 60
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite Strict
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
